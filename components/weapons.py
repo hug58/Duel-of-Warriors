@@ -48,9 +48,7 @@ class Arrow(Item):
         surface = self.image
         angle = math.degrees(self.angle) % 360
 
-        if angle != 0:
-            surface = pg.transform.rotate(surface,angle)
-
+        surface = pg.transform.rotate(surface,angle)
         new_rect = surface.get_rect(center=self.rect.center)
         self.screen.blit(surface,  new_rect.topleft)
 
@@ -63,8 +61,7 @@ class Arc(Item):
     def __init__(self, screen: pg.Surface, player: Player):
         route = "assets/arc.png"
         self.player = player
-        Item.__init__(self, route, screen,0)
-
+        Item.__init__(self, route, screen,10)
 
 
     def update(self):
@@ -84,10 +81,15 @@ class Arc(Item):
 
         :return:
         """
-        arrow:Arrow = Arrow(self.rect.centerx,self.rect.centery, self.angle, self.screen)
-        arrow.actions()
 
-        return self.get_counter(), arrow
+        get_counter = self.get_counter()
+        if get_counter:
+            arrow:Arrow = Arrow(self.rect.centerx,self.rect.centery, self.angle, self.screen)
+            arrow.actions()
+
+            return self.get_counter(), arrow
+
+        return -1, None
 
 
     def __str__(self):

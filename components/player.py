@@ -82,8 +82,10 @@ class Player:
     def actions(self, key_item:str):
         item: Item = self.inventory[key_item]
         key,arrow = item.actions()
-        self.inventory[f"ARROW_{key}"] = arrow
-        self.space.add(arrow.body, arrow.shape)
+
+        if key > -1:
+            self.inventory[f"ARROW_{key}"] = arrow
+            self.space.add(arrow.body, arrow.shape)
 
 
     def draw(self, screen: pg.Surface):
