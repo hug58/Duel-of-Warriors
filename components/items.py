@@ -4,7 +4,10 @@ import os
 
 
 
-TICK_RATE = 1/15
+TICK_RATE = 1/1
+print(f"tick:{TICK_RATE}")
+
+
 
 class Item:
 
@@ -37,6 +40,9 @@ class Item:
         self.vlx = 0
         self.vly = 0
 
+        self.time_reload = 200  #milliseconds
+        self.time_init_reload = 0
+
 
     def update(self):
         """
@@ -44,8 +50,9 @@ class Item:
         """
 
         if self.reload_action and self.count_item > 0:
-            if self.tick_last_sent >= TICK_RATE:
-                self.tick_last_sent = time.time()
+            time_now = pg.time.get_ticks()
+
+            if time_now - self.time_init_reload >= self.time_reload:
                 self.reload()
                 self.reload_action = False
 

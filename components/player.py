@@ -18,12 +18,14 @@ class Player:
     def __init__(self, pos_x:int,pos_y:int, space):
         self.rect = pg.rect.Rect(pos_x, pos_y, SIZE_PLAYER[0], SIZE_PLAYER[1])
 
-        self.body = pymunk.Body(1, 5, body_type=pymunk.Body.DYNAMIC)
+        self.body:pymunk.Body = pymunk.Body(1, 5, body_type=pymunk.Body.DYNAMIC)
         self.body.position = pos_x, pos_y
+        self.body.moment =  float("inf")
         self.body.angle = 0
         self.shape = pymunk.Poly.create_box(self.body, SIZE_PLAYER)
-        self.shape.collision_type = 2
+        self.shape.collision_type = 2 #identity collision
         self.shape.elasticity = 0.5
+
 
         self.surface = pg.Surface(self.rect.size)
         self.color = (20,82,80)
@@ -73,17 +75,23 @@ class Player:
 
 
     def jump(self):
-        force = (0, -200)
-        self.body.apply_impulse_at_local_point(force, (0, 0))
-        self.jump_on = False
+        force = (0, -500)
+        self.body.apply_impulse_at_local_point(force)
+        # self.jump_on = False
         self.move_on = False
 
 
-    def actions(self, key_item:str):
+    def actions(self, key_item:str, time_change=0):
         item: Item = self.inventory[key_item]
+        item.time_change = time_change
         key,arrow = item.actions()
-        self.inventory[f"ARROW_{key}"] = arrow
-        self.space.add(arrow.body, arrow.shape)
+
+        if key > 0:
+            self.inventory[f"ARROW_{arrow.body.id}"] = arrow
+            self.space.add(arrow.body, arrow.shape)
+        else:
+            item.time_init_reload = pg.time.get_ticks()
+            item.reload_action = True
 
 
     def draw(self, screen: pg.Surface):

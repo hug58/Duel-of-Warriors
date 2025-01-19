@@ -1,83 +1,56 @@
-import pygame
 import pymunk
-import sys
-
-from pymunk.examples.arrows import width
+import pygame
+import pymunk.pygame_util
 
 # Inicializar Pygame
 pygame.init()
-
-# Cargar la imagen de la flecha
-arrow_image = pygame.image.load("assets/arrow.png")
-# Crear el espacio de Pymunk
-space = pymunk.Space()
-space.gravity = (0, 900)  # Gravedad hacia abajo
-# Crear la clase de la flecha
-# Función para crear el piso
-def crear_piso():
-    width = 600
-
-    body = pymunk.Body(body_type=pymunk.Body.STATIC)  # Cuerpo estático
-    body.position = (0, 500)  # Posición del piso
-    shape = pymunk.Segment(body, (-400, 0), (600, 0), 20)  # Crear un segmento
-    shape.friction = 0.5  # Fricción del piso
-    space.add(body, shape)
-
-class Arrow(object):
-    def __init__(self, x, y, angle):
-        self.body = pymunk.Body(1, 100, body_type=pymunk.Body.DYNAMIC)
-        self.body.position = x, y
-        self.body.angle = angle
-        self.shape = pymunk.Poly.create_box(self.body, (50, 10))
-        self.shape.friction = 0.5
-        self.shape.elasticity = 0.3
-        space.add(self.body, self.shape)  # Añadir la flecha al espacio
-
-    def update(self):
-        # Actualizar la posición y rotación de la flecha
-        self.x, self.y = self.body.position
-        self.angle = self.body.angle
-
-    def draw(self, screen):
-        # Dibujar la flecha en la pantalla
-        rotated_image = pygame.transform.rotate(arrow_image, -self.angle * 180 / 3.14159)
-        rect = rotated_image.get_rect()
-        rect.center = (self.x, self.y)
-        screen.blit(rotated_image, rect)
-
-    def launch(self):
-        # Aplicar fuerza al lanzar la flecha
-        force = (20, -1000)  # Fuerza hacia la derecha
-        self.body.apply_impulse_at_local_point(force, (0, 0))
-        print(self.body)
-
-# Crear una flecha y aplicar fuerzas
-arrow = Arrow(100, 100, 62)
-screen = pygame.display.set_mode((600, 600))
+screen = pygame.display.set_mode((800, 600))
 clock = pygame.time.Clock()
-crear_piso()
 
-# Bucle principal del juego
-while True:
+# Crear un espacio de Pymunk
+espacio = pymunk.Space()
 
+# Crear el cuerpo de la flecha
+masa_cuerpo = 1.0
+longitud_cuerpo = 100
+cuerpo_flecha = pymunk.Body(masa_cuerpo, pymunk.moment_for_segment(masa_cuerpo, (0, 0), (0, longitud_cuerpo),1))
+cuerpo_flecha.position = (400, 300)
+
+# Crear la forma del cuerpo de la flecha
+forma_flecha = pymunk.Segment(cuerpo_flecha, (0, 0), (0, longitud_cuerpo), 5)
+forma_flecha.elasticity = 0.5
+espacio.add(cuerpo_flecha, forma_flecha)
+
+# Crear la punta de la flecha
+masa_punta = 5.0  # Peso mayor para la punta
+radio_punta = 10
+cuerpo_punta = pymunk.Body(masa_punta, pymunk.moment_for_circle(masa_punta, 0, radio_punta))
+cuerpo_punta.position = (400, 300 + longitud_cuerpo)  # Colocar la punta en la parte superior del cuerpo
+
+# Crear la forma de la punta
+forma_punta = pymunk.Circle(cuerpo_punta, radio_punta)
+forma_punta.elasticity = 0.5
+espacio.add(cuerpo_punta, forma_punta)
+
+# Conectar la punta al cuerpo de la flecha
+junta = pymunk.PinJoint(cuerpo_flecha, cuerpo_punta, (0, longitud_cuerpo), (0, 0))
+espacio.add(junta)
+draw_options = pymunk.pygame_util.DrawOptions(screen)
+# Bucle principal
+running = True
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit(1)
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:  # Al presionar la barra espaciadora
-                arrow.launch()  # Lanza la flecha
-    # Actualizar la flecha
-    arrow.update()
-    space.step(1/60.0)  # Avanzar el espacio en el tiempo
+            running = False
 
+    # Actualizar el espacio
+    espacio.step(1/60.0)
 
-    # Dibujar el piso
+    # Dibujar
     screen.fill((255, 255, 255))
-
-    pygame.draw.line(screen, (0, 0, 0), (0, 500), (width, 500), 5)
-
-    # Dibujar la flecha
-    arrow.draw(screen)
+    # pymunk.pygame_util.draw(espacio, screen)
+    espacio.debug_draw(draw_options)
     pygame.display.flip()
-    clock.tick(60)  # Limitar a 60 FPS
+    clock.tick(60)
+
+pygame.quit()

@@ -11,7 +11,7 @@ def main():
     """ Client game of server"""
     pg.display.set_caption("Testing")
     clock = pg.time.Clock()
-    WIDTH,HEIGHT = 800,200
+    WIDTH,HEIGHT = 1280,800
     SCREEN = pg.display.set_mode((WIDTH,HEIGHT))
     game = Game(SCREEN)
 
@@ -30,31 +30,54 @@ def main():
                 pg.quit()
                 sys.exit(1)
 
-            elif event.type == pg.JOYBUTTONDOWN:
-                if event.button == 0:
-                    pass
+            # elif event.type == pg.JOYBUTTONDOWN:
+            #     if event.button == 0:
+            #         pass
 
-            elif event.type == pg.JOYAXISMOTION:
-                if event.axis == 0 and event.value < 0:
-                    game.player.move(-1)
-                elif event.axis == 0 and event.value > 0:
-                    game.player.move(1)
-                else:
-                    game.player.move_on = False
+            # elif event.type == pg.JOYAXISMOTION:
+            #     if event.axis == 0 and event.value < 0:
+            #         game.player.move(-1)
+            #     elif event.axis == 0 and event.value > 0:
+            #         game.player.move(1)
+            #     else:
+            #         game.player.move_on = False
 
-            elif event.type == pg.JOYBUTTONUP:
-                if event.button == 0:
-                    pass
+            # elif event.type == pg.JOYBUTTONUP:
+            #     if event.button == 0:
+            #         pass
+
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_SPACE:
+                    if game.player.jump_on:
+                        game.player.jump()
+                        game.player.jump_on = False
+
 
             elif event.type == pg.KEYUP:
                 if event.key == pg.K_a and game.player.move_on or event.key == pg.K_d and game.player.move_on:
-                    game.player.body.velocity = (0, 0)
+                    game.player.body.velocity = (0,0)
 
-            elif event.type == pg.MOUSEBUTTONDOWN:
-                game.player.actions("arc")
 
             if event.type == pg.MOUSEMOTION:
                 game.player.angle_arc = event.pos
+
+
+
+            if event.type == pg.MOUSEBUTTONDOWN:
+
+                if event.button == 1:  # Left mouse button
+                    # game.zoom_level = min(game.max_zoom, game.zoom_level + game.zoom_factor)  # Zoom in
+                    game.time_change_start = pg.time.get_ticks()
+
+            elif event.type == pg.MOUSEBUTTONUP:
+                if event.button == 1:
+                    game.time_change_end = pg.time.get_ticks()
+                    time_change = game.time_change_end - game.time_change_start 
+
+
+                    game.player.actions("arc", time_change)
+                    # game.zoom_level = game.min_zoom
+
 
         keys = pg.key.get_pressed()
         if game.player.move_on:
@@ -63,9 +86,6 @@ def main():
             elif keys[pg.K_d]:
                 game.player.move(1)
 
-        if keys[pg.K_SPACE]:
-            if game.player.jump_on:
-                game.player.jump()
 
         SCREEN.fill((0,0,0))
         game.update()

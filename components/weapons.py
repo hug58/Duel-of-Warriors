@@ -9,7 +9,7 @@ from components.player import Player
 from pymunk.vec2d import Vec2d
 
 class Arrow(Item):
-    def __init__(self, x:int,y:int, angle: int, screen: pg.Surface):
+    def __init__(self, x:int,y:int, angle: int, time_change:int, screen: pg.Surface):
         route = "assets/arrow.png"
         Item.__init__(self, route, screen,0)
 
@@ -18,14 +18,17 @@ class Arrow(Item):
         self.y = y
 
         size = self.image.get_size()
+        self.time_change = time_change if time_change < 2500 else 2500
+        self.body = pymunk.Body(10,  pymunk.moment_for_box(1, size ))
 
-        self.body = pymunk.Body(1,  pymunk.moment_for_box(1, size ))
         # self.body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
 
         self.body.position = x, y
         self.body.angle = math.radians(angle)
         self.shape = pymunk.Poly.create_box(self.body, self.image.get_size())
         self.shape.elasticity = 0.5
+        self.shape.collision_type = 3
+        self.shape.color = (255, 0, 0, 255)  # Rojo
 
 
     def update(self):
@@ -34,10 +37,9 @@ class Arrow(Item):
         self.rect.center = (self.x,self.y)
 
 
-
     def actions(self):
         # Define the magnitude of the force
-        force_magnitude = 600
+        force_magnitude = 4000 + self.time_change * 2
 
         _radians = math.radians(self.angle) * -1
         impulse = Vec2d.from_polar(force_magnitude, _radians)
@@ -60,11 +62,14 @@ class Arrow(Item):
 
 
 class Arc(Item):
-    def __init__(self, screen: pg.Surface, player: Player):
+
+    def __init__(self,count:int, screen: pg.Surface, player: Player):
         route = "assets/arc.png"
         self.player = player
-        Item.__init__(self, route, screen,0)
+        self.time__max_change = 200  #milliseconds
+        self.time_change = 0
 
+        Item.__init__(self, route, screen, count)
 
 
     def update(self):
@@ -74,17 +79,16 @@ class Arc(Item):
 
     def can_show(self):
         angle_rad = math.radians(self.angle)  # Convert angle to radians
-        distance = 30  # Distance from the player to the arc
+        distance = 10  # Distance from the player to the arc
         self.rect.x = self.player.rect.x + distance * math.cos(angle_rad)
         self.rect.y = self.player.rect.y - distance * math.sin(angle_rad)
 
 
     def actions(self):
         """
-
         :return:
         """
-        arrow:Arrow = Arrow(self.rect.centerx,self.rect.centery, self.angle, self.screen)
+        arrow:Arrow = Arrow(self.rect.centerx,self.rect.centery, self.angle, self.time_change, self.screen)
         arrow.actions()
 
         return self.get_counter(), arrow
