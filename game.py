@@ -7,21 +7,24 @@ import pymunk.pygame_util
 
 from typing import Dict
 from components.player import Player
-from components.weapons import Arc
+from components.weapons import Arc, Shield, Item
 
 
 
 players:Dict[int, Player] = {}
 
-def create_floor(pos_a, pos_b,x,y,space, radius = 5):
+def create_floor(size: tuple,x:int,y:int,space: pymunk.Space):
     body = pymunk.Body(body_type=pymunk.Body.STATIC)
     body.position = (x, y)
-    shape = pymunk.Segment(body, pos_a, pos_b, radius)
-
+    
+    shape = pymunk.Poly.create_box(body, size)
     shape.friction = 1
     shape.collision_type = 1
 
     space.add(body, shape)
+
+
+
 
 def collision_handler(arbiter, space: pymunk.Space, data):
     shape_a = arbiter.shapes[0]
@@ -40,8 +43,6 @@ def collision_handler_arrow(arbiter, space: pymunk.Space, data):
     body: pymunk.Body = shape_b.body
     body.velocity = (0,0)
 
-    index = f"ARROW_{body.id}"
-    # players[2].inventory.pop(index)
     # space.remove(shape_b, body)
 
     return True
@@ -54,27 +55,25 @@ class Game:
 
         self.space = pymunk.Space()
         self.space.gravity = (0, 980)
+        self.items_group = pg.sprite.Group()
 
-        self.player = Player(100,100, self.space)
+        self.player = Player(100,100, self.space, self.items_group)
+        self.player.add_item_to_inventory_without_space("shield",Shield(100,self.image, self.player))
         self.player.add_item_to_inventory_without_space("arc",Arc(100,self.image, self.player))
+        self.player.select_inventory(1)
 
 
         self.space.add(self.player.body, self.player.shape)
         height = screen.get_size()[1]
         width = screen.get_size()[0]
-
-        create_floor(pos_a=(0,0), pos_b=(width,0),x=0,y=height, space= self.space)
-        create_floor(pos_a=(0,0), pos_b=(0,height),x=0,y=0, space= self.space)
-        create_floor(pos_a=(0,0), pos_b=(0,-height),x=width,y=height, space= self.space)
+        
+        create_floor(size=(width,20),x=width//2,y=height +5, space= self.space)
+        create_floor(size=(5,height),x=5,y=height//2, space= self.space)
+        create_floor(size=(5,height),x=width - 5,y=height//2, space= self.space)
 
         #platform
-        create_floor(pos_a=(0,0), pos_b=(100,0),x=300,y=700, space= self.space, radius=20)
-        create_floor(pos_a=(0,0), pos_b=(100,0),x=500,y=600, space= self.space, radius=20)
-        create_floor(pos_a=(0,0), pos_b=(100,0),x=700,y=500, space= self.space, radius=20)
-        create_floor(pos_a=(0,0), pos_b=(100,0),x=900,y=400, space= self.space, radius=20)
-        create_floor(pos_a=(0,0), pos_b=(100,0),x=700,y=300, space= self.space, radius=20)
-        create_floor(pos_a=(0,0), pos_b=(100,0),x=500,y=200, space= self.space, radius=20)
-        create_floor(pos_a=(0,0), pos_b=(100,0),x=300,y=100, space= self.space, radius=20)
+        create_floor(size=(100,20),x=300,y=300, space= self.space)
+        create_floor(size=(100,20),x=500,y=200, space= self.space)
 
 
         # Set up collision handler
@@ -95,8 +94,8 @@ class Game:
         self.min_zoom = 1.0
 
 
-        self.time_change_start = 0
-        self.time_change_end = 0
+        self.time_charge_start = 0
+        self.time_charge_end = 0
 
 
 
@@ -105,8 +104,12 @@ class Game:
         """ Update Game"""
 
         self.player.update()
-        self.space.step(1 / 60.0)
 
+        for item in self.items_group:
+            item: Item
+            item.update()
+
+        self.space.step(1 / 60.0)
 
 
     def draw(self):
@@ -114,15 +117,13 @@ class Game:
         self.image.fill((0,0,0))
         self.player.draw(self.image)
 
-        # Draw the floor
-        # for shape in self.space.shapes:
-        #     if isinstance(shape, pymunk.Segment):
-        #         pg.draw.line(self.screen, (250, 250, 250), shape.body.position, (800,200), 5)
+        for item in self.items_group:
+            item: Item
+            item.draw()
 
+        # Draw the floor
 
         self.space.debug_draw(self.draw_options)
-
-
         self.scale = pg.transform.scale(self.image, (self.image.get_width() * self.zoom_level, self.image.get_height() * self.zoom_level))
 
         # Calcular el desplazamiento basado en la posición del jugador

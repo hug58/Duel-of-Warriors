@@ -11,16 +11,17 @@ def main():
     """ Client game of server"""
     pg.display.set_caption("Testing")
     clock = pg.time.Clock()
-    WIDTH,HEIGHT = 1280,800
+    WIDTH,HEIGHT = 1280,400
     SCREEN = pg.display.set_mode((WIDTH,HEIGHT))
     game = Game(SCREEN)
 
     pg.joystick.init()
-    joystick_count = pg.joystick.get_count()
+    # pg.mouse.set_visible(False)
+    # joystick_count = pg.joystick.get_count()
 
-    if joystick_count > 0:
-        joystick = pg.joystick.Joystick(0)
-        joystick.init()
+    # if joystick_count > 0:
+    #     joystick = pg.joystick.Joystick(0)
+    #     joystick.init()
 
 
     while True:
@@ -61,21 +62,22 @@ def main():
             if event.type == pg.MOUSEMOTION:
                 game.player.angle_arc = event.pos
 
+            if event.type == pg.MOUSEWHEEL:
+                game.player.select_inventory(int(event.precise_y))
+
 
 
             if event.type == pg.MOUSEBUTTONDOWN:
 
                 if event.button == 1:  # Left mouse button
                     # game.zoom_level = min(game.max_zoom, game.zoom_level + game.zoom_factor)  # Zoom in
-                    game.time_change_start = pg.time.get_ticks()
+                    game.time_charge_start = pg.time.get_ticks()
 
             elif event.type == pg.MOUSEBUTTONUP:
                 if event.button == 1:
-                    game.time_change_end = pg.time.get_ticks()
-                    time_change = game.time_change_end - game.time_change_start 
-
-
-                    game.player.actions("arc", time_change)
+                    game.time_charge_end = pg.time.get_ticks()
+                    time_charge = game.time_charge_end - game.time_charge_start 
+                    game.player.actions(time_charge)
                     # game.zoom_level = game.min_zoom
 
 

@@ -3,25 +3,34 @@ import time
 import os
 
 
-
 TICK_RATE = 1/1
-print(f"tick:{TICK_RATE}")
 
 
 
-class Item:
-
+class Item(pg.sprite.Sprite):
+    newid = 0
     def __init__(self,
                  route_img: str,
                  screen: pg.Surface,
                  count: int,
+                 player: object
                  ):
         """
         :param route_img:
         :param screen:
         :param count:
         :param count_limit:
+        :param player:
         """
+        
+        super().__init__()
+
+        Item.newid += 1
+        self.id = Item.newid
+        self.player_id:object = player
+
+
+
         self.route_img =  route_img
         path_img = os.path.join(os.path.abspath("."), route_img)
         self.image = pg.image.load(path_img)
@@ -42,7 +51,10 @@ class Item:
 
         self.time_reload = 200  #milliseconds
         self.time_init_reload = 0
+        self.time_charge = 0
 
+
+        self._visible = True
 
     def update(self):
         """
@@ -93,6 +105,16 @@ class Item:
 
     def can_show(self):
         pass
+
+
+    @property
+    def visible(self):
+        return self._visible
+    
+
+    @visible.setter
+    def visible(self,status:bool):
+        self._visible = status
 
 
     def draw(self):
